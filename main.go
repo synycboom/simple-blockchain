@@ -1,57 +1,25 @@
 package main
 
 import (
-	"bytes"
-	"crypto/sha256"
 	"fmt"
+	"strconv"
+
+	"github.com/synycboom/simple-blockchain/blockchain"
 )
 
-type BlockChain struct {
-	blocks []*Block
-}
-
-type Block struct {
-	Hash     []byte
-	Data     []byte
-	PrevHash []byte
-}
-
-func (b *Block) DeriveHash() {
-	info := bytes.Join([][]byte{b.Data, b.PrevHash}, []byte{})
-	hash := sha256.Sum256(info)
-	b.Hash = hash[:]
-}
-
-func CreateBlock(data string, prevHash []byte) *Block {
-	block := &Block{[]byte{}, []byte(data), prevHash}
-	block.DeriveHash()
-
-	return block
-}
-
-func (c *BlockChain) AddBlock(data string) {
-	prevBlock := c.blocks[len(c.blocks)-1]
-	newBlock := CreateBlock(data, prevBlock.Hash)
-	c.blocks = append(c.blocks, newBlock)
-}
-
-func Genesis() *Block {
-	return CreateBlock("Genesis", []byte{})
-}
-
-func InitBlockChain() *BlockChain {
-	return &BlockChain{[]*Block{Genesis()}}
-}
-
 func main() {
-	chain := InitBlockChain()
+	chain := blockchain.InitBlockChain()
 	chain.AddBlock("First Block")
 	chain.AddBlock("Second Block")
 	chain.AddBlock("Third Block")
 
-	for _, block := range chain.blocks {
+	for _, block := range chain.Blocks {
 		fmt.Printf("Prev Hash: %x\n", block.PrevHash)
 		fmt.Printf("Data in Block: %s\n", block.Data)
 		fmt.Printf("Hash: %x\n", block.Hash)
+
+		pow := blockchain.NewProof(block)
+		fmt.Printf("Pow: %s\n", strconv.FormatBool(pow.Validate()))
+		fmt.Println()
 	}
 }
